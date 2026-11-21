@@ -127,11 +127,11 @@ function formatAirportPopup(airport, report) {
         if (Number.isFinite(report.wspd)) {
             const direction = report.wdir === 'VRB' ? 'variable'
                 : Number.isFinite(report.wdir) ? `${String(report.wdir).padStart(3, '0')}°` : 'dirección N/D';
-            wind = `${direction}, ${report.wspd} kt (${Math.round(report.wspd * 1.852)} km/h)`;
+            const arrow = Number.isFinite(report.wdir) && report.wspd > 0 ? `${getWindArrow(report.wdir)} ` : '';
+            wind = `${arrow}${direction}, ${report.wspd} kt (${Math.round(report.wspd * 1.852)} km/h)`;
             if (Number.isFinite(report.wgst)) wind += `, rachas ${report.wgst} kt (${Math.round(report.wgst * 1.852)} km/h)`;
             const variation = observation.match(/\b(\d{3})V(\d{3})\b/);
             if (variation) wind += `, variable entre ${variation[1]}° y ${variation[2]}°`;
-            if (Number.isFinite(report.wdir) && report.wspd > 0) wind += ` ${getWindArrow(report.wdir)}`;
         }
         html += airportRow('Viento', wind);
         html += airportRow('Visibilidad', airportVisibility(report, observation));
