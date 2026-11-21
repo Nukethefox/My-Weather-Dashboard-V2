@@ -53,4 +53,5 @@ button:disabled, select:disabled { background: #b36749; }
   .layout { display: block; }
   .sidebar { padding: 20px; border-right: 0; border-bottom: 1px solid #3d3808; }
   .brand { margin-bottom: 26px; }
+  #map { object-position: center top; }
 }
