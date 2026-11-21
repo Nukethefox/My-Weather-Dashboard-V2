@@ -2,9 +2,8 @@ name: Publicar web y HARMONIE
 
 on:
   workflow_dispatch:
-  # Activar después de comprobar el visor:
-  # schedule:
-  #   - cron: "30 4,10,16,22 * * *"
+  schedule:
+    - cron: "30 4,10,16,22 * * *"
 
 permissions:
   contents: read
