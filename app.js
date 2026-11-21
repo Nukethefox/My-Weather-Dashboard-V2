@@ -347,6 +347,27 @@ async function discoverMaps() {
   const timeout = setTimeout(() => controller.abort(), 10000);
   try {
     const results = await Promise.allSettled(models.map(async model => {
+      if (model === "HARMONIE") {
+        const indexResponse = await fetch("harmonie-index.json", { cache: "no-store", signal: controller.signal });
+        if (indexResponse.status !== 404) {
+          if (!indexResponse.ok) throw new Error(`HARMONIE: HTTP ${indexResponse.status}`);
+          const index = await indexResponse.json();
+          if (index.model !== model || typeof index.run !== "string" ||
+              !Array.isArray(index.images) || !index.images.length) {
+            throw new Error("HARMONIE: índice de mapas inválido");
+          }
+          return index.images.map(path => {
+            const match = typeof path === "string" && /^HARMONIE\/([^/]+)$/.exec(path);
+            if (!match) throw new Error("HARMONIE: ruta de imagen inválida");
+            const url = new URL(path, indexResponse.url);
+            const record = parseRecord(match[1], url.href);
+            if (!record || record.model !== model || record.run !== index.run) {
+              throw new Error("HARMONIE: imagen incompatible con el índice");
+            }
+            return record;
+          });
+        }
+      }
       const response = await fetch(`${model}/`, { cache: "no-store", signal: controller.signal });
       if (response.status === 404) return [];
       if (!response.ok) throw new Error(`${model}: HTTP ${response.status}`);
