@@ -110,7 +110,7 @@ function updateModelInfo(record, targetHour) {
   const time = runTime(latestRuns[currentModel]);
   const offset = (referenceTime - time) / hourMs;
   const adjustment = offset ? ` Diferencia: +${offset} h.` : "";
-  const frame = record && record.hour !== targetHour ? ` Se muestra el mapa +${record.hour} h para el plazo +${targetHour} h del modelo.` : "";
+  const frame = record && record.hour !== targetHour ? ` ` : "";
   elements["model-info"].textContent = `Referencia: ${formatRun(referenceTime)}. ${currentModel}: ${formatRun(time)}.${adjustment}${frame}`;
 }
 
