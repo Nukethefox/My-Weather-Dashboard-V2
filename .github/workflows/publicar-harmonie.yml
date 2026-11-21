@@ -1,0 +1,136 @@
+name: Publicar web y HARMONIE
+
+on:
+  workflow_dispatch:
+  # Activar después de comprobar el visor:
+  # schedule:
+  #   - cron: "30 4,10,16,22 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      MPLBACKEND: Agg
+      EVENT_NAME: ${{ github.event_name }}
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v6
+
+      - name: Preparar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Instalar dependencias
+        run: python -m pip install requests tifffile imagecodecs matplotlib cartopy numpy scipy
+
+      - name: Generar imágenes
+        shell: bash
+        run: |
+          if [ -e HARMONIE ]; then
+            echo "La carpeta HARMONIE ya existe; se cancela para no mezclar salidas."
+            exit 1
+          fi
+          python -u harmonie_generator.py 2>&1 | tee "$RUNNER_TEMP/harmonie.log"
+          if grep -E ' -> (Error|Aviso)' "$RUNNER_TEMP/harmonie.log"; then
+            echo "Generación con errores o avisos; no se publicará."
+            exit 1
+          fi
+
+      - name: Comprobar salida y crear índice
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+
+          files = sorted(Path("HARMONIE").glob("*.png"))
+          pattern = re.compile(
+              r"HARMONIE-(iberia|mediterraneo)-"
+              r"(PRECIP|PRECIP_ACC|TEMP2m|VIENTO10)-"
+              r"(\d{10})-(\d{3})\.png"
+          )
+          matches = [pattern.fullmatch(file.name) for file in files]
+          if any(match is None for match in matches):
+              raise SystemExit("Hay imágenes con nombres inesperados.")
+
+          runs = {match.group(3) for match in matches}
+          actual = {
+              (match.group(1), match.group(2), match.group(4))
+              for match in matches
+          }
+          expected = {
+              (region, product, f"{hour:03d}")
+              for region in ("iberia", "mediterraneo")
+              for product in ("PRECIP", "PRECIP_ACC", "TEMP2m", "VIENTO10")
+              for hour in range(1, 49)
+          }
+          if len(runs) != 1 or len(files) != 384 or actual != expected:
+              raise SystemExit(
+                  f"Salida incompleta: {len(files)} imágenes; "
+                  f"{len(expected - actual)} mapas ausentes; salidas: {runs}."
+              )
+          if any(file.stat().st_size == 0 for file in files):
+              raise SystemExit("Hay imágenes vacías.")
+
+          run = runs.pop()
+          if os.environ["EVENT_NAME"] == "schedule":
+              reference = datetime.now(timezone.utc) - timedelta(hours=4, minutes=30)
+              expected_run = reference.replace(
+                  hour=(reference.hour // 6) * 6, minute=0, second=0, microsecond=0
+              ).strftime("%Y%m%d%H")
+              if run != expected_run:
+                  raise SystemExit(
+                      f"AEMET ofrece {run}, pero se esperaba {expected_run}; "
+                      "se conserva la publicación anterior."
+                  )
+
+          manifest = {
+              "model": "HARMONIE",
+              "run": run,
+              "images": [f"HARMONIE/{file.name}" for file in files],
+          }
+          Path("harmonie-index.json").write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+          )
+          print(f"Salida {run}: 384 imágenes verificadas.")
+          PY
+
+      - name: Preparar web
+        run: |
+          mkdir _site
+          rsync -a --exclude='.git/' --exclude='.github/' \
+            --exclude='_site/' --exclude='HARMONIE/' \
+            --exclude='__pycache__/' --exclude='*.py' ./ _site/
+          cp -a HARMONIE _site/HARMONIE
+
+      - name: Guardar web para publicación
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  publicar:
+    needs: generar
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publicar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
