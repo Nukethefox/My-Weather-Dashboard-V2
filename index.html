@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar de Lluvia</title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="index_style.css">
+</head>
+<body>
+    <nav class="navbar" aria-label="Navegación principal">
+        <button id="btn-1" class="nav-btn" type="button">Centrar mapa</button>
+        <a class="nav-btn" href="mis_modelos.html">Mapas de modelos</a>
+    </nav>
+
+    <div id="map"></div>
+
+    <div id="map-left-overlay" class="overlay-left-container">
+        <div class="tool-box">
+            <div class="mode-field">
+                <label for="station-mode-select" class="mode-label">Visualización</label>
+                <select id="station-mode-select" class="mode-select">
+                    <option value="none" selected>Sin estaciones AEMET</option>
+                    <option value="dots">Puntos AEMET</option>
+                    <option value="temp">AEMET Temperatura</option>
+                    <option value="lluvia">AEMET Precipitación</option>
+                    <option value="viento">AEMET Velocidad viento</option>
+                </select>
+            </div>
+            <label class="airport-toggle">
+                <input id="airports-visible" type="checkbox" checked>
+                Aeropuertos
+            </label>
+            <select id="overlay-mode-select" aria-label="Capa meteorológica">
+                <option value="none" selected>Sin radar ni satélite</option>
+                <option value="radar">Radar</option>
+                <option value="satellite">Satélite Meteosat (IR)</option>
+                <option value="satellite-ir-colour">Satélite Meteosat (IR color)</option>
+                <option value="satellite-geocolour">Satélite Meteosat (Geo Colour)</option>
+            </select>
+            <div id="radar-controls" hidden>
+                <div id="radar-timestamp">--:--</div>
+                <div id="radar-buttons">
+                    <button id="radar-prev-btn" type="button" aria-label="Fotograma anterior">◀</button>
+                    <button id="radar-play-btn" type="button" aria-label="Reproducir radar">▶</button>
+                    <button id="radar-next-btn" type="button" aria-label="Fotograma siguiente">▶</button>
+                </div>
+                <input id="radar-slider" type="range" min="0" max="0" step="1" value="0" aria-label="Fotograma del radar">
+            </div>
+            <div id="radar-legend" hidden></div>
+            <div id="satellite-status" role="status" hidden></div>
+            <div id="station-status" role="status" hidden>
+                <span id="station-status-message"></span>
+                <button id="station-retry-btn" type="button">Reintentar</button>
+            </div>
+            <div id="airport-status" role="status" hidden>
+                <span id="airport-status-message"></span>
+                <button id="airport-retry-btn" type="button">Reintentar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script src="script_index.js"></script>
+    <script src="airports.js"></script>
+</body>
+</html>

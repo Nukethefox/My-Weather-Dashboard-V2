@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Visor de modelos meteorológicos</title>
+  <link rel="stylesheet" href="predicciones_style.css">
+  <script src="app.js?v=20261114-4" defer></script>
+</head>
+<body>
+  <nav class="navbar" aria-label="Navegación principal">
+    <a class="nav-btn" href="index.html">Mapa de observaciones</a>
+    <a class="nav-btn" href="mis_modelos.html" aria-current="page">Mapas de modelos</a>
+  </nav>
+  <div class="layout">
+    <aside class="sidebar">
+      <header class="brand">
+        <div class="brand-mark" aria-hidden="true">M</div>
+        <div><p class="eyebrow">VISOR METEOROLÓGICO</p><h1>MODELOS</h1></div>
+      </header>
+
+      <div class="field">
+        <input id="folder" type="file" webkitdirectory multiple tabindex="-1" aria-hidden="true">
+        <button id="choose-folder" class="folder-button" type="button">Seleccionar carpeta de modelos</button>
+        <p id="source-info" class="hint" role="status"></p>
+      </div>
+      <div class="field">
+        <span class="field-label">Modelo</span>
+        <div class="models" role="group" aria-label="Modelo">
+          <button type="button" data-model="HARMONIE" aria-pressed="false" disabled>HARMONIE</button>
+          <button type="button" data-model="ECMWF" aria-pressed="false" disabled>ECMWF</button>
+          <button type="button" data-model="GFS" aria-pressed="false" disabled>GFS</button>
+        </div>
+        <p id="model-info" class="hint" aria-live="polite"></p>
+      </div>
+      <div class="field">
+        <label for="region">Región</label>
+        <select id="region" disabled></select>
+      </div>
+      <div class="field">
+        <label for="product">Producto / variable</label>
+        <select id="product" disabled></select>
+        <p class="hint">★ Disponible en los tres modelos con los mapas cargados de sus últimas salidas.</p>
+      </div>
+
+      <div class="time-heading">
+        <label for="hour">Plazo</label>
+        <output id="hour-label" for="hour">—</output>
+      </div>
+      <input id="hour" type="range" min="1" max="48" value="1" disabled>
+      <div class="range-ends"><span id="first-hour">—</span><span id="last-hour">—</span></div>
+      <div class="playback">
+        <button id="previous" type="button" disabled aria-label="Retroceder una hora">−1h</button>
+        <button id="play" class="play" type="button" disabled>▶ <span>Reproducir</span></button>
+        <button id="next" type="button" disabled aria-label="Avanzar una hora">+1h</button>
+      </div>
+      <p class="hint">Espacio: reproducir o pausar. Flechas: avanzar o retroceder una hora.</p>
+
+    </aside>
+
+    <main class="main">
+      <div class="content">
+        <section class="map-card" aria-label="Mapa de predicción">
+          <div class="map-content">
+            <img id="map" alt="" hidden>
+            <div id="message" class="message" role="status">No se ha iniciado el visor. Comprueba que JavaScript está activado y que app.js está junto a esta página; después, recarga.</div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

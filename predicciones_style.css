@@ -1,0 +1,56 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, "Segoe UI", sans-serif;
+  color: #cacaca;
+  background: #0f0d0b;
+  font-synthesis: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 280px; }
+button, select, input { font: inherit; }
+button, select, .folder-button { cursor: pointer; }
+button:disabled, select:disabled, input:disabled { cursor: not-allowed; opacity: .48; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #ffc615; outline-offset: 3px; }
+.navbar { height: 50px; display: flex; align-items: center; gap: 15px; padding: 0 20px; background: #1a130f; border-bottom: 1px solid #3d3808; }
+.nav-btn { display: inline-flex; align-items: center; min-height: 34px; padding: 0 16px; border-radius: 8px; background: #ef7f1a; color: #000; font-size: 12px; font-weight: 700; text-decoration: none; }
+.nav-btn:hover { background: #ffc615; }
+.nav-btn:focus-visible { outline: 2px solid #ffc615; outline-offset: 3px; }
+.layout { min-height: calc(100vh - 50px); display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+.sidebar { display: flex; flex-direction: column; padding: 30px 24px 24px; background: #1a130f; border-right: 1px solid #3d3808; }
+.brand { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; }
+.brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 8px; background: #ef7f1a; color: #000; font-size: 23px; font-weight: 700; }
+.eyebrow { margin: 0 0 6px; color: #ef7f1a; font-size: 10px; font-weight: 700; letter-spacing: .16em; }
+h1 { margin: 0; font-size: 17px; letter-spacing: .08em; }
+.section-heading { display: flex; justify-content: space-between; color: #f0c39d; font-size: 10px; font-weight: 700; letter-spacing: .15em; border-bottom: 1px solid #3d3808; padding-bottom: 13px; margin-bottom: 20px; }
+.field { margin-bottom: 20px; }
+.field label:not(.folder-button), .field-label, .time-heading label { display: block; margin-bottom: 9px; color: #cacaca; font-size: 13px; font-weight: 600; }
+select { width: 100%; padding: 12px; border: 0; border-radius: 8px; background: #ef7f1a; color: #000; font-weight: 600; }
+select:not(:disabled):hover, select:not(:disabled):focus { background: #ffc615; }
+.timeline-heading { margin-top: 21px; }
+.time-heading { display: flex; align-items: center; justify-content: space-between; }
+.time-heading label { margin: 0; }
+.time-heading output { padding: 6px 9px; border-radius: 5px; background: #241a15; color: #f0c39d; font-size: 12px; font-weight: 700; }
+input[type="range"] { width: 100%; margin: 22px 0 8px; accent-color: #ef7f1a; }
+.range-ends { display: flex; justify-content: space-between; color: #f0c39d; font-size: 11px; }
+.playback { display: grid; grid-template-columns: 1fr 1.8fr 1fr; gap: 7px; margin-top: 21px; }
+button { min-height: 40px; border: 0; border-radius: 8px; background: #ef7f1a; color: #000; font-size: 12px; font-weight: 700; }
+button:not(:disabled):hover, .folder-button:hover { background: #ffc615; color: #000; }
+button:disabled, select:disabled { background: #b36749; }
+.models { display: flex; flex-wrap: wrap; gap: 6px; }
+.models button { flex: 1 1 auto; padding: 0 8px; background: #3d2f26; color: #cacaca; }
+.models button[aria-pressed="true"] { background: #ef7f1a; color: #000; }
+.models button:disabled { background: #241a15; color: #bbaea4; }
+.hint { color: #bbaea4; font-size: 12px; line-height: 1.6; }
+.folder-button { display: block; width: 100%; padding: 10px; border-radius: 8px; background: #ef7f1a; text-align: center; color: #000; font-size: 12px; font-weight: 600; }
+#folder { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+.main { min-width: 0; }
+.map-content { display: grid; place-items: center; height: calc(100vh - 50px); background: #0f0d0b; }
+#map { display: block; width: 100%; height: 100%; max-height: calc(100vh - 50px); object-fit: contain; }
+#map[hidden] { display: none; }
+.message { padding: 35px; max-width: 520px; text-align: center; color: #cacaca; font-size: 14px; line-height: 1.6; }
+.message[hidden] { display: none; }
+@media (max-width: 760px) {
+  .layout { display: block; }
+  .sidebar { padding: 20px; border-right: 0; border-bottom: 1px solid #3d3808; }
+  .brand { margin-bottom: 26px; }
+}
