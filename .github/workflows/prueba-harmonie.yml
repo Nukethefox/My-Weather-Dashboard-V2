@@ -1,0 +1,85 @@
+name: Prueba manual HARMONIE
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      MPLBACKEND: Agg
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install requests tifffile imagecodecs matplotlib cartopy numpy scipy
+
+      - name: Generar imágenes
+        shell: bash
+        run: |
+          python -u harmonie_generator.py 2>&1 | tee "$RUNNER_TEMP/harmonie.log"
+
+          if grep -E ' -> (Error|Aviso)' "$RUNNER_TEMP/harmonie.log"; then
+            echo "La generación terminó con errores o avisos."
+            exit 1
+          fi
+
+      - name: Comprobar imágenes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          files = list(Path("HARMONIE").glob("*.png"))
+          pattern = re.compile(
+              r"HARMONIE-(iberia|mediterraneo)-"
+              r"(PRECIP|PRECIP_ACC|TEMP2m|VIENTO10)-"
+              r"(\d{10})-(\d{3})\.png"
+          )
+
+          matches = [pattern.fullmatch(file.name) for file in files]
+          if any(match is None for match in matches):
+              raise SystemExit("Hay imágenes con nombres inesperados.")
+
+          runs = {match.group(3) for match in matches}
+          actual = {
+              (match.group(1), match.group(2), match.group(4))
+              for match in matches
+          }
+          expected = {
+              (region, product, f"{hour:03d}")
+              for region in ("iberia", "mediterraneo")
+              for product in ("PRECIP", "PRECIP_ACC", "TEMP2m", "VIENTO10")
+              for hour in range(1, 49)
+          }
+
+          if len(runs) != 1 or len(files) != 384 or actual != expected:
+              raise SystemExit(
+                  f"Salida incompleta: {len(files)} imágenes, "
+                  f"{len(runs)} salidas y {len(expected - actual)} mapas ausentes."
+              )
+
+          print(f"Correcto: 384 imágenes de la salida {runs.pop()}.")
+          PY
+
+      - name: Guardar imágenes de prueba
+        uses: actions/upload-artifact@v4
+        with:
+          name: harmonie-prueba
+          path: HARMONIE/*.png
+          retention-days: 1
+          if-no-files-found: error
