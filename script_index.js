@@ -489,6 +489,12 @@ function getWindArrow(deg) {
     return WIND_ARROWS[index];
 }
 
+function formatRainfall(value) {
+    return typeof value === 'number' && Number.isFinite(value)
+        ? String(Number(value.toFixed(2)))
+        : String(value);
+}
+
 function formatLocalDate(isoString, timeZone) {
     if (!isoString) return 'Sin fecha';
     const parsed = new Date(isoString);
@@ -516,7 +522,7 @@ function formatHoverPopup(props) {
 function formatStationPopup(props, coordinates) {
     const altText = props.alt !== null && props.alt !== undefined ? `${Math.round(props.alt)} m` : 'N/D';
     const tempText = props.temp !== null && props.temp !== undefined ? `${props.temp} °C` : 'N/D';
-    const rainText = props.lluvia !== null && props.lluvia !== undefined ? `${props.lluvia} mm` : 'N/D';
+    const rainText = props.lluvia !== null && props.lluvia !== undefined ? `${formatRainfall(props.lluvia)} mm` : 'N/D';    
     const windText = props.viento !== null && props.viento !== undefined ? `${props.viento} km/h` : 'N/D';
     const gustText = props.racha !== null && props.racha !== undefined ? `${props.racha} km/h` : null;
     const humText = props.humedad !== null && props.humedad !== undefined ? `${Math.round(props.humedad)} %` : null;
@@ -564,7 +570,7 @@ function enrichStationsForDisplay(geojson) {
         }
 
         const tempStr = p.temp !== null && p.temp !== undefined ? `${p.temp}°` : '';
-        const rainStr = p.lluvia !== null && p.lluvia !== undefined ? `${p.lluvia}` : '';
+        const rainStr = p.lluvia !== null && p.lluvia !== undefined ? formatRainfall(p.lluvia) : '';
         const windStr = p.viento !== null && p.viento !== undefined ? `${p.viento}` : '';
 
         latestByStation.set(stationKey, {
