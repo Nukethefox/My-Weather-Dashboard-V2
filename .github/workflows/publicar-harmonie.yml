@@ -3,7 +3,7 @@ name: Publicar web y HARMONIE
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 4,10,16,22 * * *"
+    - cron: "30 */2 * * *"
 
 permissions:
   contents: read
@@ -16,6 +16,8 @@ jobs:
   generar:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    outputs:
+      generated: ${{ steps.generate.outputs.generated }}
     env:
       MPLBACKEND: Agg
       EVENT_NAME: ${{ github.event_name }}
@@ -24,36 +26,67 @@ jobs:
       - name: Descargar código
         uses: actions/checkout@v6
 
+      - name: Comprobar salida publicada
+        id: check
+        if: github.event_name == 'schedule'
+        env:
+          HARMONIE_INDEX_URL: https://nukethefox.github.io/My-Weather-Dashboard-V2/harmonie-index.json
+        run: python3 harmonie_schedule.py
+
       - name: Preparar Python
+        if: github.event_name == 'workflow_dispatch' || steps.check.outputs.needed == 'true'
         uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
       - name: Instalar dependencias
+        if: github.event_name == 'workflow_dispatch' || steps.check.outputs.needed == 'true'
         run: python -m pip install requests tifffile imagecodecs matplotlib cartopy numpy scipy
 
       - name: Generar imágenes
+        id: generate
+        if: github.event_name == 'workflow_dispatch' || steps.check.outputs.needed == 'true'
         shell: bash
+        env:
+          HARMONIE_EXPECTED_RUN: ${{ steps.check.outputs.expected_run }}
         run: |
           if [ -e HARMONIE ]; then
             echo "La carpeta HARMONIE ya existe; se cancela para no mezclar salidas."
             exit 1
           fi
+          set +e
           python -u harmonie_generator.py 2>&1 | tee "$RUNNER_TEMP/harmonie.log"
+          statuses=("${PIPESTATUS[@]}")
+          set -e
+          if [ "${statuses[1]}" -ne 0 ]; then
+            echo "No se pudo guardar el registro del generador."
+            exit 1
+          fi
+          if [ "${statuses[0]}" -eq 75 ]; then
+            echo "generated=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${statuses[0]}" -ne 0 ]; then
+            echo "El generador falló con código ${statuses[0]}."
+            exit "${statuses[0]}"
+          fi
           if grep -E ' -> (Error|Aviso)' "$RUNNER_TEMP/harmonie.log"; then
             echo "Generación con errores o avisos; no se publicará."
             exit 1
           fi
+          echo "generated=true" >> "$GITHUB_OUTPUT"
 
       - name: Comprobar salida y crear índice
+        if: steps.generate.outputs.generated == 'true'
         shell: bash
         run: |
           python - <<'PY'
           import json
           import os
           import re
-          from datetime import datetime, timedelta, timezone
+          from datetime import datetime, timezone
           from pathlib import Path
+          from harmonie_schedule import expected_run
 
           files = sorted(Path("HARMONIE").glob("*.png"))
           pattern = re.compile(
@@ -86,13 +119,10 @@ jobs:
 
           run = runs.pop()
           if os.environ["EVENT_NAME"] == "schedule":
-              reference = datetime.now(timezone.utc) - timedelta(hours=4, minutes=30)
-              expected_run = reference.replace(
-                  hour=(reference.hour // 6) * 6, minute=0, second=0, microsecond=0
-              ).strftime("%Y%m%d%H")
-              if run != expected_run:
+              current_expected_run = expected_run(datetime.now(timezone.utc))
+              if run != current_expected_run:
                   raise SystemExit(
-                      f"AEMET ofrece {run}, pero se esperaba {expected_run}; "
+                      f"AEMET ofrece {run}, pero se esperaba {current_expected_run}; "
                       "se conserva la publicación anterior."
                   )
 
@@ -108,20 +138,23 @@ jobs:
           PY
 
       - name: Preparar web
+        if: steps.generate.outputs.generated == 'true'
         run: |
           mkdir _site
           rsync -a --exclude='.git/' --exclude='.github/' \
             --exclude='_site/' --exclude='HARMONIE/' \
-            --exclude='__pycache__/' --exclude='*.py' ./ _site/
+            --exclude='tests/' --exclude='__pycache__/' --exclude='*.py' ./ _site/
           cp -a HARMONIE _site/HARMONIE
 
       - name: Guardar web para publicación
+        if: steps.generate.outputs.generated == 'true'
         uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
   publicar:
     needs: generar
+    if: needs.generar.outputs.generated == 'true'
     runs-on: ubuntu-latest
     permissions:
       pages: write

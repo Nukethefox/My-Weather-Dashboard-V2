@@ -326,6 +326,12 @@ run_str = run_datetime.strftime("%H")
 date_key = f"{year_str}{month_str}{day_str}"
 print(f"-> Run detectado: {date_key} {run_str}Z | Plazos disponibles: {len(valid_times)}")
 
+expected_run = os.environ.get("HARMONIE_EXPECTED_RUN")
+if expected_run and date_key + run_str != expected_run:
+    print(f"AEMET ofrece {date_key}{run_str}, pero se esperaba {expected_run}; "
+          "se conserva la publicación anterior y se volverá a intentar.")
+    sys.exit(75)
+
 # Rejilla de los GeoTIFF: esquina superior izquierda de pixel en (-11.0125, 44.4875)
 sample_tif = files[(valid_times[0], '11')]
 with tifffile.TiffFile(sample_tif) as t:
