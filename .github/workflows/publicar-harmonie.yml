@@ -3,7 +3,7 @@ name: Publicar web y HARMONIE
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 */3 * * *"
+    - cron: "30 1,4,7,10,13,16,19,22 * * *"
 
 permissions:
   contents: read
