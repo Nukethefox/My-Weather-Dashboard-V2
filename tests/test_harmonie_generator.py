@@ -31,8 +31,8 @@ class GeneratorScheduleTests(unittest.TestCase):
         self.assertIn("AEMET ofrece 2026112200, pero se esperaba 2026112206", result.stdout)
         self.assertNotIn("Traceback", result.stderr)
 
-    def test_matching_or_manual_run_proceeds_to_tiff(self):
-        for expected in ("2026112200", None):
+    def test_matching_newer_or_manual_run_proceeds_to_tiff(self):
+        for expected in ("2026112200", "2026112118", None):
             with self.subTest(expected=expected):
                 result = self.run_generator(expected)
                 self.assertNotEqual(result.returncode, 75)

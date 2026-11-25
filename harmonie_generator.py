@@ -327,7 +327,7 @@ date_key = f"{year_str}{month_str}{day_str}"
 print(f"-> Run detectado: {date_key} {run_str}Z | Plazos disponibles: {len(valid_times)}")
 
 expected_run = os.environ.get("HARMONIE_EXPECTED_RUN")
-if expected_run and date_key + run_str != expected_run:
+if expected_run and date_key + run_str < expected_run:
     print(f"AEMET ofrece {date_key}{run_str}, pero se esperaba {expected_run}; "
           "se conserva la publicación anterior y se volverá a intentar.")
     sys.exit(75)

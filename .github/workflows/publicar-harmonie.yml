@@ -120,7 +120,7 @@ jobs:
           run = runs.pop()
           if os.environ["EVENT_NAME"] == "schedule":
               current_expected_run = expected_run(datetime.now(timezone.utc))
-              if run != current_expected_run:
+              if run < current_expected_run:
                   raise SystemExit(
                       f"AEMET ofrece {run}, pero se esperaba {current_expected_run}; "
                       "se conserva la publicación anterior."
